@@ -52,3 +52,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# configuration
+credentials_store.py
