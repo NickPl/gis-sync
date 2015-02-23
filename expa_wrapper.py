@@ -17,6 +17,7 @@ class EXPAWrapper:
         if last_interaction is not None:
             url += '&filters%5Blast_interaction%5D%5Bfrom%5D=' + str(last_interaction)
         current_page = requests.get(url, verify=False).json()
+        logging.debug('Current page from EXPA: {0}'.format(current_page))
         total_items = current_page['paging']['total_items']
         logging.info('Loading %d EPs from EXPA...', total_items)
         total_pages = current_page['paging']['total_pages']
@@ -27,7 +28,7 @@ class EXPAWrapper:
                 current_id = i['id']
                 person = self.get_person_detail(current_id)
                 date_created = datetime.datetime.strptime(i['created_at'], "%Y-%m-%dT%H:%M:%SZ").date()
-                result.append(expa_account.EXPAAccount(i['first_name'] + ' ' + i['last_name'], i['email'], date_created,
+                result.append(expa_account.EXPAAccount(i['first_name'] + ' ' + i['last_name'], i['email'], i['id'], date_created,
                                                        self.get_profile_dictionary(person)))
         return result
 
