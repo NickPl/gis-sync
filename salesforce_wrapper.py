@@ -13,13 +13,17 @@ class SalesforceWrapper:
 
     @staticmethod
     def escape_query_argument(query_argument):
-        escaped_argument = query_argument.replace("'", r"\'").replace('"', r'\"').replace('\\', r'\\\\').replace("?", r"\?").replace("&", r"\&").replace("|", r"\|").replace("!", r"\!").replace("^", r"\^").replace("$", r"\$").replace("*", r"\*").replace("+", r"\+").replace("-", r"\-").replace("~", r"\~")
+        escaped_argument = query_argument.replace("'", r"\'").replace('"', r'\"').replace('\\', r'\\\\').replace("?",
+                                                                                                                 r"\?").replace(
+            "&", r"\&").replace("|", r"\|").replace("!", r"\!").replace("^", r"\^").replace("$", r"\$").replace("*",
+                                                                                                                r"\*").replace(
+            "+", r"\+").replace("-", r"\-").replace("~", r"\~")
         logging.debug("Escaping {0} to {1}...".format(query_argument, escaped_argument))
         return escaped_argument
 
     def does_lead_exist(self, email, expa_id):
-        query = "SELECT Id FROM Lead WHERE Email = '{0}' OR EXPA_ID__c = {1}".format(email,
-                                                                                   expa_id)
+        query = "SELECT Id FROM Lead WHERE RecordTypeId = '{0}' AND (Email = '{1}' OR EXPA_ID__c = {2})".format(
+            '01220000000MHoeAAG', email, expa_id)
         try:
             query_result = self.sf.query_all(query)
             if query_result is None or query_result["totalSize"] == 0:
@@ -36,7 +40,7 @@ class SalesforceWrapper:
         try:
             query = 'FIND {' + self.escape_query_argument(email) + '} IN EMAIL FIELDS RETURNING Account'
             query_result = self.sf.search(query)
-            return query_result is not None and query_result['totalSize'] > 0
+            return query_result is not None
         except Exception:
             logging.exception('An error has occured while searching for Salesforce accounts!')
 
