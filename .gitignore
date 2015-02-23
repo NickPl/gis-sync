@@ -55,3 +55,6 @@ target/
 
 # configuration
 credentials_store.py
+
+# IDE
+.idea
