@@ -1,0 +1,40 @@
+#!/bin/bash
+LOGFILE="/opt/gis-sync/expa_sync.log"
+MINS=5
+
+if [ "$1" = "autoconf" ]; then
+    if [ -r "$LOGFILE" ]; then
+        echo yes
+        exit 0
+    else
+        echo no
+        exit 1
+    fi
+elif [ "$1" = "config" ]; then
+    echo 'graph_title GIS-Sync'
+    echo 'graph_args --base 1000 -l 0'
+    echo 'graph_vlabel number'
+    echo 'graph_category GIS'
+    echo 'loaded_people.label People loaded from EXPA in the last 5 min'
+    echo 'error.label # Errors in the last 5 min'
+    echo 'lead_create.label # Created Leads in the last 5 min'
+    echo 'lead_update.label # Updated Leads in the last 5 min'
+    echo 'ep_update.label # Updated EPs in the last 5 min'
+    exit 0
+else
+        NOW=`date +%s`
+    TIME=$(( ${NOW} - $((60 * ${MINS})) ))
+    SEARCH=""
+    
+    while [ ${TIME} -lt ${NOW} ] ; do
+        SEARCH="${SEARCH}\|`date -d \"1970-01-01 00:00 UTC ${TIME} sec\" \"+%F %H:%M\"`"
+        let TIME+=60
+    done
+    SEARCH=${SEARCH:2}
+
+    echo "loaded_people.value `grep \"${SEARCH}\" ${LOGFILE} | grep -v \"INFO     Loading .* EPs from EXPA...\" | grep -c \"INFO     Loading .* from EXPA...\"`"
+    echo "error.value `grep \"${SEARCH}\" ${LOGFILE} | grep -v \"InsecureRequestWarning)\|InsecureRequestWarning\" | grep -c \" ERROR    \"`"
+    echo "lead_create.value `grep \"${SEARCH}\" ${LOGFILE} | grep -c \"INFO.*Creating a new lead for\"`"
+    echo "lead_update.value `grep \"${SEARCH}\" ${LOGFILE} | grep -c \"INFO.*Updating lead information for\"`"
+    echo "ep_update.value `grep \"${SEARCH}\" ${LOGFILE} | grep -c \"INFO.*Updating EP information for\"`"
+fi
