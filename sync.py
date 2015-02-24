@@ -50,7 +50,7 @@ def main():
                 logging.info("Starting continuous sync...")
             persons = expa.get_all_records(date_to_sync)
             for current_person in persons:
-                if sf.does_account_exist(current_person.email):
+                if sf.does_account_exist(current_person.email) or sf.does_ep_exist(current_person.email, current_person.id):
                     if sf.does_ep_exist(current_person.email, current_person.id):
                         logging.info('Updating EP information for %s (%s)...', current_person.full_name,
                                      current_person.email)

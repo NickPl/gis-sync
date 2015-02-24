@@ -23,7 +23,7 @@ class StreamToLogger(object):
 
 
 def main():
-    logging.basicConfig(filename='expa_sync.log'.format(str(datetime.datetime.today().date())), level=logging.INFO,
+    logging.basicConfig(filename='expa_initial_sync.log'.format(str(datetime.datetime.today().date())), level=logging.INFO,
                         format='%(asctime)s %(levelname)-8s %(message)s')
     stdout_logger = logging.getLogger('')
     sl = StreamToLogger(stdout_logger, logging.INFO)
@@ -42,18 +42,20 @@ def main():
                                                                     credentials["expa"]["password"])
             access_token = token_generator.generate_token()
             expa = expa_wrapper.EXPAWrapper(access_token)
-            persons = expa.get_all_records()
-            for current_person in persons:
-                if sf.does_account_exist(current_person.email):
-                    if sf.does_ep_exist(current_person.email, current_person.id):
-                        logging.info('Updating EP information for %s (%s)...', current_person.full_name,
+            total_pages = expa.get_page_number()
+            for x in range(0, total_pages):
+                persons = expa.get_all_records(None, x)
+                for current_person in persons:
+                    if sf.does_account_exist(current_person.email) or sf.does_ep_exist(current_person.email, current_person.id):
+                        if sf.does_ep_exist(current_person.email, current_person.id):
+                            logging.info('Updating EP information for %s (%s)...', current_person.full_name,
+                                         current_person.email)
+                            sf.update_ep(current_person.sf_dictionary)
+                    elif sf.does_lead_exist(current_person.email, current_person.id):
+                        logging.info('Updating lead information for %s (%s)...', current_person.full_name,
                                      current_person.email)
-                        sf.update_ep(current_person.sf_dictionary)
-                elif sf.does_lead_exist(current_person.email, current_person.id):
-                    logging.info('Updating lead information for %s (%s)...', current_person.full_name,
-                                 current_person.email)
-                    sf.update_lead(current_person.sf_dictionary)
-            logging.info("Initial sync has finished successfully!")
+                        sf.update_lead(current_person.sf_dictionary)
+                logging.info("Initial sync has finished successfully!")
         except Exception:
             logging.exception("An error has occured while generating an EXPA access token!")
     except Exception:
