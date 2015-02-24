@@ -5,6 +5,10 @@ import lc_mapper
 import logging
 
 
+class InvalidEPException(Exception):
+    pass
+
+
 class EXPAWrapper:
     def __init__(self, access_token):
         self.access_token = access_token
@@ -30,23 +34,23 @@ class EXPAWrapper:
         total_pages = current_page['paging']['total_pages']
         result = []
         if page is None:
-            for c in range(1, total_pages + 1):
-                current_page = requests.get(url + '&page=%d' % c, verify=False).json()
-                for i in current_page['data']:
-                    current_id = i['id']
-                    person = self.get_person_detail(current_id)
-                    date_created = datetime.datetime.strptime(i['created_at'], "%Y-%m-%dT%H:%M:%SZ").date()
-                    result.append(expa_account.EXPAAccount(i['first_name'] + ' ' + i['last_name'], i['email'], i['id'], date_created,
-                                                           self.get_profile_dictionary(person)))
+            start_page = 1
+            end_page = total_pages + 1
         else:
-            current_page = requests.get(url + '&page=%d' % page, verify=False).json()
+            start_page = page
+            end_page = start_page + 1
+        for c in range(start_page, end_page):
+            current_page = requests.get(url + '&page=%d' % c, verify=False).json()
             for i in current_page['data']:
                 current_id = i['id']
                 person = self.get_person_detail(current_id)
                 date_created = datetime.datetime.strptime(i['created_at'], "%Y-%m-%dT%H:%M:%SZ").date()
-                result.append(expa_account.EXPAAccount(i['first_name'] + ' ' + i['last_name'], i['email'], i['id'], date_created,
-                                                        self.get_profile_dictionary(person)))
-
+                try:
+                    current_account = expa_account.EXPAAccount(i['first_name'] + ' ' + i['last_name'], i['email'], i['id'],
+                                                           date_created, self.get_profile_dictionary(person))
+                    result.append(current_account)
+                except InvalidEPException as iee:
+                    logging.warning(iee)
         return result
 
     def get_person_detail(self, person_id):
@@ -76,7 +80,10 @@ class EXPAWrapper:
             office_id = person_json['current_office']['id']
         else:
             office_id = person_json['home_lc']['id']
-        result['OwnerId'] = self.lc_mapper.op_to_sf(office_id)
+        try:
+            result['OwnerId'] = self.lc_mapper.op_to_sf(office_id)
+        except KeyError as ke:
+            raise InvalidEPException("The EP has an invalid current office: {0}".format(ke))
         result['EXPA_ID__c'] = person_json['id']
         result['EXPA_url__c'] = 'https://experience.aiesec.org/#/people/' + str(person_json['id'])
         if person_json['status'] is not None:
