@@ -12,7 +12,14 @@ class EXPAWrapper:
         self.people_url = self.base_url + 'people/'
         self.lc_mapper = lc_mapper.LCMapper()
 
-    def get_all_records(self, last_interaction=None):
+    def get_page_number(self, last_interaction=None):
+        url = self.base_url + 'people.json?access_token=' + self.access_token + '&per_page=200'
+        if last_interaction is not None:
+            url += '&filters%5Blast_interaction%5D%5Bfrom%5D=' + str(last_interaction)
+        current_page = requests.get(url, verify=False).json()
+        return current_page['paging']['total_pages']
+
+    def get_all_records(self, last_interaction=None, page=None):
         url = self.base_url + 'people.json?access_token=' + self.access_token + '&per_page=200'
         if last_interaction is not None:
             url += '&filters%5Blast_interaction%5D%5Bfrom%5D=' + str(last_interaction)
@@ -22,14 +29,24 @@ class EXPAWrapper:
         logging.info('Loading %d EPs from EXPA...', total_items)
         total_pages = current_page['paging']['total_pages']
         result = []
-        for c in range(1, total_pages + 1):
-            current_page = requests.get(url + '&page=%d' % c, verify=False).json()
+        if page is None:
+            for c in range(1, total_pages + 1):
+                current_page = requests.get(url + '&page=%d' % c, verify=False).json()
+                for i in current_page['data']:
+                    current_id = i['id']
+                    person = self.get_person_detail(current_id)
+                    date_created = datetime.datetime.strptime(i['created_at'], "%Y-%m-%dT%H:%M:%SZ").date()
+                    result.append(expa_account.EXPAAccount(i['first_name'] + ' ' + i['last_name'], i['email'], i['id'], date_created,
+                                                           self.get_profile_dictionary(person)))
+        else:
+            current_page = requests.get(url + '&page=%d' % page, verify=False).json()
             for i in current_page['data']:
                 current_id = i['id']
                 person = self.get_person_detail(current_id)
                 date_created = datetime.datetime.strptime(i['created_at'], "%Y-%m-%dT%H:%M:%SZ").date()
                 result.append(expa_account.EXPAAccount(i['first_name'] + ' ' + i['last_name'], i['email'], i['id'], date_created,
-                                                       self.get_profile_dictionary(person)))
+                                                        self.get_profile_dictionary(person)))
+
         return result
 
     def get_person_detail(self, person_id):
@@ -47,7 +64,7 @@ class EXPAWrapper:
     def collect_from_picklist(json):
         result = []
         for i in json:
-            result.append(i['name'])
+            result.append(i['name'].title())
         return ', '.join(result)
 
     def get_profile_dictionary(self, person_json):
