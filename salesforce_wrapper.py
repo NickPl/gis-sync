@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import simple_salesforce
+from simple_salesforce import SalesforceMalformedRequest
 import logging
 
 
@@ -66,7 +67,10 @@ class SalesforceWrapper:
 
     def update_lead(self, profile_dictionary):
         for record in self.current_lead_ids:
-            self.sf.Lead.update(record, profile_dictionary)
+            try:
+                self.sf.Lead.update(record, profile_dictionary)
+            except SalesforceMalformedRequest as smr:
+                logging.warning(smr)
 
     def update_ep(self, profile_dictionary):
         profile_dictionary.pop("FirstName", None)
@@ -74,4 +78,7 @@ class SalesforceWrapper:
         profile_dictionary.pop("Email", None)
         profile_dictionary.pop("OwnerId", None)
         for record in self.current_ep_ids:
-            self.sf.EP__c.update(record, profile_dictionary)
+            try:
+                self.sf.EP__c.update(record, profile_dictionary)
+            except SalesforceMalformedRequest as smr:
+                logging.warning(smr)
