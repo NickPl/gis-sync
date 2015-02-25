@@ -16,17 +16,21 @@ class EXPAWrapper:
         self.people_url = self.base_url + 'people/'
         self.lc_mapper = lc_mapper.LCMapper()
 
+    @staticmethod
+    def format_date_time(date_time):
+        return date_time.strftime('%Y-%m-%dT%H:%M:%SZ')
+
     def get_page_number(self, last_interaction=None):
         url = self.base_url + 'people.json?access_token=' + self.access_token + '&per_page=200'
         if last_interaction is not None:
-            url += '&filters%5Blast_interaction%5D%5Bfrom%5D=' + str(last_interaction)
+            url += '&filters%5Blast_interaction%5D%5Bfrom%5D=' + EXPAWrapper.format_date_time(last_interaction)
         current_page = requests.get(url, verify=False).json()
         return current_page['paging']['total_pages']
 
     def get_all_records(self, last_interaction=None, page=None):
         url = self.base_url + 'people.json?access_token=' + self.access_token + '&per_page=200'
         if last_interaction is not None:
-            url += '&filters%5Blast_interaction%5D%5Bfrom%5D=' + str(last_interaction)
+            url += '&filters%5Blast_interaction%5D%5Bfrom%5D=' + EXPAWrapper.format_date_time(last_interaction)
         current_page = requests.get(url, verify=False).json()
         logging.debug('Current page from EXPA: {0}'.format(current_page))
         total_items = current_page['paging']['total_items']
