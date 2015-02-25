@@ -23,7 +23,7 @@ class StreamToLogger(object):
 
 
 def main():
-    logging.basicConfig(filename='expa_sync.log'.format(str(datetime.datetime.today().date())), level=logging.INFO,
+    logging.basicConfig(filename='expa_sync.log'.format(str(datetime.datetime.today().date())), level=logging.DEBUG,
                         format='%(asctime)s %(levelname)-8s %(message)s')
     stdout_logger = logging.getLogger('')
     sl = StreamToLogger(stdout_logger, logging.INFO)
@@ -43,10 +43,10 @@ def main():
             access_token = token_generator.generate_token()
             expa = expa_wrapper.EXPAWrapper(access_token)
             if len(sys.argv) > 1 and sys.argv[1] == 'daily':
-                date_to_sync = datetime.datetime.today().date() - datetime.timedelta(days=1)
+                date_to_sync = datetime.datetime.today() - datetime.timedelta(hours=25)
                 logging.info("Starting daily sync...")
             else:
-                date_to_sync = datetime.datetime.today().date() - datetime.timedelta(minutes=30)
+                date_to_sync = datetime.datetime.today() - datetime.timedelta(minutes=90)
                 logging.info("Starting continuous sync...")
             persons = expa.get_all_records(date_to_sync)
             for current_person in persons:
