@@ -80,6 +80,9 @@ class EXPAWrapper:
             office_id = person_json['current_office']['id']
         else:
             office_id = person_json['home_lc']['id']
+        if person_json['cv_info'] is not None:
+            result['EXPA_CV_URL__c'] = person_json['cv_info']['url']
+            result['EXPA_CV_Name__c'] = person_json['cv_info']['name']
         try:
             result['OwnerId'] = self.lc_mapper.op_to_sf(office_id)
         except KeyError as ke:
