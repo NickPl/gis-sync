@@ -14,7 +14,8 @@ class EXPAWrapper:
         self.access_token = access_token
         self.base_url = 'https://gis-api.aiesec.org:443/v1/'
         self.people_url = self.base_url + 'people/'
-        self.lc_mapper = lc_mapper.LCMapper()
+        self.lc_owner_mapper = lc_mapper.LC2SFOwnerMapper()
+        self.lc_city_mapper = lc_mapper.LC2CityMapper()
 
     @staticmethod
     def format_date_time(date_time):
@@ -88,7 +89,8 @@ class EXPAWrapper:
             result['EXPA_CV_URL__c'] = person_json['cv_info']['url']
             result['EXPA_CV_Name__c'] = person_json['cv_info']['name']
         try:
-            result['OwnerId'] = self.lc_mapper.op_to_sf(office_id)
+            result['OwnerId'] = self.lc_owner_mapper.op_to_sf(office_id)
+            result['closest_city__c'] = self.lc_city_mapper.op_to_city(office_id)
         except KeyError as ke:
             raise InvalidEPException("The EP has an invalid current office: {0}".format(ke))
         result['EXPA_ID__c'] = person_json['id']

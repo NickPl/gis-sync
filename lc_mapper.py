@@ -1,7 +1,7 @@
 # coding=utf-8
 
 
-class LCMapper:
+class LC2SFOwnerMapper:
     def __init__(self):
         self.op_sf_dictionary = {713: '00520000002hmQa', 686: '00520000002hmQf',
                                  1465: '00520000002hOQ0', 1454: '00520000002iPe6',
@@ -33,3 +33,36 @@ class LCMapper:
     def sf_to_op(self, sf_lc):
         inv_map = {v: k for k, v in self.op_sf_dictionary.items()}
         return inv_map[sf_lc]
+
+class LC2CityMapper:
+    def __init__(self):
+        self.op_sf_dictionary = {713: 'Aachen', 686: 'Augsburg',
+                                 1465: 'Bamberg', 1454: 'Bayreuth',
+                                 680: 'Berlin HU', 708: 'Berlin TU',
+                                 664: 'Bielefeld', 1442: 'Bochum', 693: 'Bonn',
+                                 678: 'Braunschweig', 665: 'Bremen',
+                                 667: 'Darmstadt', 1470: 'Dortmund',
+                                 677: 'Dresden', 1448: 'Duesseldorf',
+                                 1433: 'Essen', 657: 'Frankfurt',
+                                 1653: 'Freiburg', 1420: 'Gießen',
+                                 1415: 'Goettingen', 1523: 'Hamburg',
+                                 757: 'Halle', 1441: 'Hannover',
+                                 699: 'Heidelberg', 696: 'Jena',
+                                 1533: 'Kaiserslautern', 643: 'Karlsruhe',
+                                 1438: 'Kiel', 1421: 'Koeln', 1410: 'Leipzig',
+                                 1414: 'Lueneburg', 1447: 'Magdeburg',
+                                 60: 'Mainz', 1520: 'Mannheim',
+                                 1394: 'München', 1484: 'Muenster',
+                                 1440: 'Nuernberg', 625: 'Oldenburg',
+                                 663: 'Paderborn', 1403: 'Passau',
+                                 648: 'Regensburg', 647: 'Stuttgart',
+                                 1439: 'Tuebingen/Reutlingen', 469: 'Ulm',
+                                 1443: 'Wuerzburg', 624: '00520000002iPfT',
+				 1596: ''}
+
+    def op_to_city(self, op_lc):
+        return self.op_sf_dictionary[op_lc]
+
+    def city_to_op(self, city):
+        inv_map = {v: k for k, v in self.op_sf_dictionary.items()}
+        return inv_map[city]
