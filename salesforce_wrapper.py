@@ -77,6 +77,7 @@ class SalesforceWrapper:
         profile_dictionary.pop("LastName", None)
         profile_dictionary.pop("Email", None)
         profile_dictionary.pop("OwnerId", None)
+        profile_dictionary.pop("closest_city__c", None)
         for record in self.current_ep_ids:
             try:
                 self.sf.EP__c.update(record, profile_dictionary)
