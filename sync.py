@@ -1,10 +1,10 @@
 import datetime
-import gis_token_generator
 import salesforce_wrapper
 import expa_wrapper
 from credentials_store import credentials
 import logging
 import sys
+from expa_salesforce_converter import EXPASalesforceConverter
 
 
 class StreamToLogger(object):
@@ -38,30 +38,31 @@ def main():
             credentials["salesforce"]["sandbox"])
         logging.info("Generating an EXPA access token...")
         try:
-            token_generator = gis_token_generator.GISTokenGenerator(credentials["expa"]["user"],
-                                                                    credentials["expa"]["password"])
-            access_token = token_generator.generate_token()
-            expa = expa_wrapper.EXPAWrapper(access_token)
+            expa = expa_wrapper.EXPAWrapper(credentials["expa"]["user"], credentials["expa"]["password"])
             if len(sys.argv) > 1 and sys.argv[1] == 'daily':
                 date_to_sync = datetime.datetime.today() - datetime.timedelta(hours=25)
                 logging.info("Starting daily sync...")
             else:
                 date_to_sync = datetime.datetime.today() - datetime.timedelta(minutes=90)
                 logging.info("Starting continuous sync...")
-            persons = expa.get_all_records(date_to_sync)
+            persons = expa.get_people(date_to_sync)
+            expa_salesforce_converter = EXPASalesforceConverter()
             for current_person in persons:
-                if sf.does_account_exist(current_person.email) or sf.does_ep_exist(current_person.email, current_person.id):
-                    if sf.does_ep_exist(current_person.email, current_person.id):
-                        logging.info('Updating EP information for %s (%s)...', current_person.full_name,
-                                     current_person.email)
-                        sf.update_ep(current_person.sf_dictionary)
-                elif sf.does_lead_exist(current_person.email, current_person.id):
-                    logging.info('Updating lead information for %s (%s)...', current_person.full_name,
-                                 current_person.email)
-                    sf.update_lead(current_person.sf_dictionary)
+                salesforce_dictionary = expa_salesforce_converter.convert_expa_json_to_salesforce_dictionary(
+                    current_person)
+                email = salesforce_dictionary['Email']
+                expa_id = salesforce_dictionary['EXPA_ID__c']
+                full_name = salesforce_dictionary['FirstName'] + ' ' + salesforce_dictionary['LastName']
+                if sf.does_account_exist(email) or sf.does_ep_exist(email, expa_id):
+                    if sf.does_ep_exist(email, expa_id):
+                        logging.info('Updating EP information for %s (%s)...', full_name, email)
+                        sf.update_ep(salesforce_dictionary)
+                elif sf.does_lead_exist(email, expa_id):
+                    logging.info('Updating lead information for %s (%s)...', full_name, email)
+                    sf.update_lead(salesforce_dictionary)
                 else:
-                    logging.info('Creating a new lead for %s (%s)...', current_person.full_name, current_person.email)
-                    sf.create_lead(current_person.sf_dictionary)
+                    logging.info('Creating a new lead for %s (%s)...', full_name, email)
+                    sf.create_lead(salesforce_dictionary)
             logging.info("Sync has finished successfully!")
         except Exception:
             logging.exception("An error has occured while generating an EXPA access token!")

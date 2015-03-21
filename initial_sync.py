@@ -44,7 +44,7 @@ def main():
             expa = expa_wrapper.EXPAWrapper(access_token)
             total_pages = expa.get_page_number()
             for x in range(0, total_pages):
-                persons = expa.get_all_records(None, x)
+                persons = expa.get_people(None, x)
                 for current_person in persons:
                     if sf.does_account_exist(current_person.email) or sf.does_ep_exist(current_person.email, current_person.id):
                         if sf.does_ep_exist(current_person.email, current_person.id):
