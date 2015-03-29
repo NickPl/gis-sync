@@ -40,10 +40,10 @@ def main():
         try:
             expa = expa_wrapper.EXPAWrapper(credentials["expa"]["user"], credentials["expa"]["password"])
             if len(sys.argv) > 1 and sys.argv[1] == 'daily':
-                date_to_sync = datetime.datetime.today() - datetime.timedelta(hours=25)
+                date_to_sync = datetime.datetime.today() - datetime.timedelta(hours=26)
                 logging.info("Starting daily sync...")
             else:
-                date_to_sync = datetime.datetime.today() - datetime.timedelta(minutes=90)
+                date_to_sync = datetime.datetime.today() - datetime.timedelta(minutes=180)
                 logging.info("Starting continuous sync...")
             persons = expa.get_people(date_to_sync)
             expa_salesforce_converter = EXPASalesforceConverter()
