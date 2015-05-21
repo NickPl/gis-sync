@@ -66,6 +66,7 @@ class SalesforceWrapper:
         self.sf.Lead.create(profile_dictionary)
 
     def update_lead(self, profile_dictionary):
+        profile_dictionary.pop("OwnerId", None)
         for record in self.current_lead_ids:
             try:
                 self.sf.Lead.update(record, profile_dictionary)
