@@ -62,7 +62,7 @@ def main():
                     sf.update_lead(salesforce_dictionary)
                 else:
                     expa_signup_date = datetime.datetime.strptime(salesforce_dictionary['EXPA_SignUp_Date__c'],
-                                                                  '%Y-%m-%dT%H-%M-%SZ').date()
+                                                                  '%Y-%m-%dT%H:%M:%SZ').date()
                     gis_launch_date = datetime.datetime.strptime('2014-11-05', '%Y-%m-%d').date()
                     if expa_signup_date >= gis_launch_date:
                         logging.info('Creating a new lead for %s (%s)...', full_name, email)
