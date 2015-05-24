@@ -69,7 +69,8 @@ def main():
                         sf.create_lead(salesforce_dictionary)
                     else:
                         logging.info(
-                            'Not creating a new lead for %s (%s) because the sign up date is before the GIS launch date...')
+                            'Not creating a new lead for %s (%s) because the sign up date is before the GIS launch date...',
+                            full_name, email)
             logging.info("Sync has finished successfully!")
         except Exception:
             logging.exception("An error has occured while generating an EXPA access token!")
