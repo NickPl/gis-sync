@@ -9,6 +9,7 @@ class SalesforceWrapper:
     def __init__(self, _email, _password, _security_token, _sandbox):
         self.sf = simple_salesforce.Salesforce(username=_email, password=_password, security_token=_security_token,
                                                sandbox=_sandbox)
+        self.sf.headers['Sforce-Auto-Assign'] = 'FALSE'
         self.current_lead_ids = []
         self.current_ep_ids = []
 
