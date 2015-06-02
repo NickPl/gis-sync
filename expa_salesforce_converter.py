@@ -40,8 +40,8 @@ class EXPASalesforceConverter:
         try:
             result['OwnerId'] = self.lc_owner_mapper.op_to_sf(office_id)
             result['closest_city__c'] = self.lc_city_mapper.op_to_city(office_id)
-        except KeyError as ke:
-            raise InvalidEPException("The EP has an invalid current office: {0}".format(ke))
+        except KeyError:
+            logging.error("The EP has an invalid current office: {0}".format(office_id))
         result['EXPA_ID__c'] = expa_json['id']
         result['EXPA_url__c'] = 'https://experience.aiesec.org/#/people/' + str(expa_json['id'])
         if expa_json['status'] is not None:
