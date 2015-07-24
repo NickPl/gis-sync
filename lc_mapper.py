@@ -25,7 +25,7 @@ class LC2SFOwnerMapper:
                                  648: '00520000002iPfE', 647: '00520000002hmSH',
                                  1439: '00520000002iPfO', 469: '00520000002hmSW',
                                  1443: '00520000002hmDR', 624: '00520000002iPfT',
-				 1596: '00520000002I4PD'}
+				 1596: '00520000002I4PD', 1844: '00520000004KlOI'}
 
     def op_to_sf(self, op_lc):
         return self.op_sf_dictionary[op_lc]
@@ -58,7 +58,7 @@ class LC2CityMapper:
                                  648: 'Regensburg', 647: 'Stuttgart',
                                  1439: 'Tuebingen/Reutlingen', 469: 'Ulm',
                                  1443: 'Wuerzburg', 624: '00520000002iPfT',
-				 1596: ''}
+				 1596: '', 1844: 'Brühl'}
 
     def op_to_city(self, op_lc):
         return self.op_sf_dictionary[op_lc]
