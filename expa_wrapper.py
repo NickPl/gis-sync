@@ -9,6 +9,7 @@ class EXPAWrapper:
         self.access_token = ''
         self.base_url = 'https://gis-api.aiesec.org:443/v1/'
         self.people_url = self.base_url + 'people/'
+        self.opportunity_url = self.base_url + 'opportunities/'
 
     @staticmethod
     def format_date_time(date_time):
@@ -59,4 +60,70 @@ class EXPAWrapper:
 
     def get_person_detail(self, person_id):
         url = self.people_url + str(person_id) + '.json?access_token={0}'
+        return self.fire_request(url)
+
+    def get_opportunity_applicants(self, opportunity_id, existing_applicants):
+        url = self.opportunity_url + str(opportunity_id) + '/applications.json?access_token={0}'
+        current_page = self.fire_request(url)
+        logging.debug('Current page from EXPA: {0}'.format(current_page))
+        total_items = current_page['paging']['total_items']
+        logging.info('Loading %d applicants from EXPA...', total_items)
+        total_pages = current_page['paging']['total_pages']
+        result = []
+        start_page = 1
+        end_page = total_pages + 1
+        for c in range(start_page, end_page):
+            current_page = self.fire_request(url + '&page=%d' % c)
+            for i in current_page['data']:
+                current_id = i['person']['id']
+                if current_id not in existing_applicants:
+                    applicant = self.get_person_detail(current_id)
+                    result.append(applicant)
+        return result
+
+    def get_match_data(self, opportunity_id):
+        opp_json = self.get_opportunity_detail(opportunity_id)
+        status = opp_json['current_status']
+        url = self.base_url + 'opportunities/' + str(opportunity_id) + '/applications.json?access_token={0}'
+        url += '&filters%5Bstatus%5D=' + status
+        app_json = self.fire_request(url)
+        app_id = None
+        print(app_json)
+        for app in app_json['data']:
+            app_id = app['id']
+        if app_id is None:
+            return None
+        url = self.base_url + 'applications/' + str(app_id) + '/an.json?access_token={0}'
+        an_json = self.fire_request(url)
+        result = {"person": an_json['person']['id'], "matched_date": an_json['matched_or_rejected_at']}
+        return result
+
+    def get_opportunities(self, last_interaction=None, page=None):
+        url = self.base_url + 'opportunities.json?access_token={0}&per_page=200'
+        if last_interaction is not None:
+            url += '&filters%5Blast_interaction%5D%5Bfrom%5D=' + EXPAWrapper.format_date_time(last_interaction)
+        url += '&filters%5Bcountries%5B%5D=1596'
+        url += '&filters%5Bprogrammes%5B%5D=1&filters%5Bprogrammes%5B%5D=2'
+        url += '&filters%5Bstatus%5D=realized'
+        current_page = self.fire_request(url)
+        logging.debug('Current page from EXPA: {0}'.format(current_page))
+        total_items = current_page['paging']['total_items']
+        logging.info('Loading %d opportunities from EXPA...', total_items)
+        total_pages = current_page['paging']['total_pages']
+        result = []
+        if page is None:
+            start_page = 1
+            end_page = total_pages + 1
+        else:
+            start_page = page
+            end_page = start_page + 1
+        for c in range(start_page, end_page):
+            current_page = self.fire_request(url + '&page=%d' % c)
+            for i in current_page['data']:
+                opportunity = self.get_opportunity_detail(i['id'])
+                result.append(opportunity)
+        return result
+
+    def get_opportunity_detail(self, opportunity_id):
+        url = self.opportunity_url + str(opportunity_id) + '.json?access_token={0}'
         return self.fire_request(url)

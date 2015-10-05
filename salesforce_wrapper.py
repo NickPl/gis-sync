@@ -11,7 +11,8 @@ class SalesforceWrapper:
                                                sandbox=_sandbox)
         self.sf.headers['Sforce-Auto-Assign'] = 'FALSE'
         self.current_lead_ids = []
-        self.current_ep_ids = []
+        self.current_account_ids = []
+        self.current_opportunity_ids = []
 
     @staticmethod
     def escape_query_argument(query_argument):
@@ -28,7 +29,7 @@ class SalesforceWrapper:
             '01220000000MHoeAAG', email, expa_id)
         try:
             query_result = self.sf.query_all(query)
-            if query_result is None or query_result["totalSize"] == 0:
+            if self.is_query_result_empty(query_result):
                 return False
             else:
                 self.current_lead_ids = []
@@ -38,50 +39,119 @@ class SalesforceWrapper:
         except Exception:
             logging.exception('An error has occured while searching for Salesforce leads!')
 
-    def does_account_exist(self, email):
+    def does_account_exist(self, email, expa_id=None):
+        query = "SELECT Id FROM Account WHERE PersonEmail = '{0}'".format(email)
+        if expa_id is not None:
+            query += " OR EXPA_ID__c = {0}".format(expa_id)
         try:
-            query = 'FIND {' + self.escape_query_argument(email) + '} IN EMAIL FIELDS RETURNING Account'
-            query_result = self.sf.search(query)
-            return query_result is not None
+            query_result = self.sf.query_all(query)
+            if self.is_query_result_empty(query_result):
+                return False
+            else:
+                self.current_account_ids = []
+                for record in query_result["records"]:
+                    self.current_account_ids.append(record["Id"])
+                return True
         except Exception:
             logging.exception('An error has occured while searching for Salesforce accounts!')
 
-    def does_ep_exist(self, email, expa_id):
-        query = "SELECT Id FROM EP__c WHERE E_Mail__c = '{0}' OR EXPA_ID__c = {1}".format(
-            email, expa_id)
+    def does_opportunity_exist(self, expa_id):
+        query = "SELECT Id FROM TN__c WHERE Opportunity_ID__c = {0}".format(expa_id)
         try:
             query_result = self.sf.query_all(query)
-            if query_result is None or query_result["totalSize"] == 0:
+            if self.is_query_result_empty(query_result):
                 return False
             else:
-                self.current_ep_ids = []
+                self.current_opportunity_ids = []
                 for record in query_result["records"]:
-                    self.current_ep_ids.append(record["Id"])
-                return True
+                    self.current_opportunity_ids.append(record["Id"])
+                    return True
         except Exception:
-            logging.exception('An error has occured while searching for Salesforce EPs!')
+            logging.exception('An error has occured while searching for Salesforce opportunities!')
+
+    @staticmethod
+    def is_query_result_empty(query_result):
+        return query_result is None or query_result["totalSize"] == 0
 
     def create_lead(self, profile_dictionary):
-        profile_dictionary['RecordTypeId'] = '01220000000MHoeAAG'
-        profile_dictionary['LeadSource'] = 'Opportunities Portal'
-        self.sf.Lead.create(profile_dictionary)
+        result = self.sf.Lead.create(profile_dictionary)
+        return result['id']
 
     def update_lead(self, profile_dictionary):
-        profile_dictionary.pop("OwnerId", None)
         for record in self.current_lead_ids:
             try:
                 self.sf.Lead.update(record, profile_dictionary)
             except SalesforceMalformedRequest as smr:
                 logging.warning(smr)
 
-    def update_ep(self, profile_dictionary):
+    def update_account(self, profile_dictionary):
         profile_dictionary.pop("FirstName", None)
         profile_dictionary.pop("LastName", None)
         profile_dictionary.pop("Email", None)
         profile_dictionary.pop("OwnerId", None)
         profile_dictionary.pop("closest_city__c", None)
-        for record in self.current_ep_ids:
+        profile_dictionary.pop("Minimum_Duration_of_Internship__c", None)
+        profile_dictionary.pop("Maximum_Duration_of_Internship__c", None)
+        profile_dictionary.pop("EXPA_SignUp_Date__c", None)
+        profile_dictionary.pop("Area_of_world_interested_in_going__c", None)
+        profile_dictionary.pop("specific_countries__c", None)
+        for record in self.current_account_ids:
             try:
-                self.sf.EP__c.update(record, profile_dictionary)
+                self.sf.Account.update(record, profile_dictionary)
             except SalesforceMalformedRequest as smr:
                 logging.warning(smr)
+
+    def update_opportunity(self, opportunity_dictionary):
+        for record in self.current_opportunity_ids:
+            try:
+                self.sf.TN__c.update(record, opportunity_dictionary)
+                return record
+            except SalesforceMalformedRequest as smr:
+                logging.warning(smr)
+
+    def create_opportunity(self, opportunity_dictionary):
+        result = self.sf.TN__c.create(opportunity_dictionary)
+        return result['id']
+
+    def get_applicants(self, opportunity_id):
+        result = []
+        query = "SELECT EXPA_ID__c FROM Lead WHERE TN_relation__c = '{0}'".format(opportunity_id)
+        try:
+            query_result = self.sf.query_all(query)
+            if not self.is_query_result_empty(query_result):
+                for record in query_result["records"]:
+                    result.append(record["EXPA_ID__c"])
+            return result
+        except Exception:
+            logging.exception('An error has occured while searching for Salesforce leads!')
+
+    def does_match_object_exist(self, opportunity_id):
+        query = "SELECT Id FROM Match2__c WHERE Opportunity__c = '{0}'".format(opportunity_id)
+        try:
+            query_result = self.sf.query_all(query)
+            return not self.is_query_result_empty(query_result)
+        except Exception:
+            logging.exception('An error has occured while searching for Salesforce match objects!')
+            return False
+
+    def create_match_object(self, opportunity_id, trainee_expa_id, match_date):
+        query = "SELECT Id FROM Lead WHERE TN_relation__c = '{0}' AND EXPA_ID__c = {1}".format(opportunity_id, trainee_expa_id)
+        try:
+            query_result = self.sf.query_all(query)
+            for record in query_result["records"]:
+                lead_id = record['Id']
+            if not self.is_query_result_empty(query_result):
+                print(self.sf.apexecute('Lead/{0}'.format(lead_id)))
+                query = "SELECT ConvertedAccountId FROM Lead WHERE TN_relation__c = '{0}' AND EXPA_ID__c = {1}".format(opportunity_id, trainee_expa_id)
+                query_result = self.sf.query_all(query)
+                if self.is_query_result_empty(query_result):
+                    raise Exception
+                print(query_result)
+                for record in query_result["records"]:
+                    accountId = record['ConvertedAccountId']
+                match_dictionary = {"Trainee__c": accountId, "Opportunity__c": opportunity_id, "Match_Date__c": match_date}
+                self.sf.Match2__c.create(match_dictionary)
+        except Exception:
+            logging.exception('An error has occured while creating a Salesforce match object!')
+
+

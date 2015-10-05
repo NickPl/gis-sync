@@ -53,12 +53,17 @@ def main():
                 email = salesforce_dictionary['Email']
                 expa_id = salesforce_dictionary['EXPA_ID__c']
                 full_name = salesforce_dictionary['FirstName'] + ' ' + salesforce_dictionary['LastName']
-                if sf.does_account_exist(email) or sf.does_ep_exist(email, expa_id):
-                    if sf.does_ep_exist(email, expa_id):
-                        logging.info('Updating EP information for %s (%s)...', full_name, email)
-                        sf.update_ep(salesforce_dictionary)
+                if sf.does_account_exist(email) or sf.does_account_exist(email, expa_id):
+                    logging.info('Updating account information for %s (%s)...', full_name, email)
+                    sf.update_account(salesforce_dictionary)
                 elif sf.does_lead_exist(email, expa_id):
                     logging.info('Updating lead information for %s (%s)...', full_name, email)
+                    salesforce_dictionary.pop("OwnerId", None)
+                    salesforce_dictionary.pop("Minimum_Duration__c", None)
+                    salesforce_dictionary.pop("Maximum_Duration__c", None)
+                    salesforce_dictionary.pop("EXPA_SignUp_Date__c", None)
+                    salesforce_dictionary.pop("Regional_Preferences__c", None)
+                    salesforce_dictionary.pop("Country_Preference__c", None)
                     sf.update_lead(salesforce_dictionary)
                 else:
                     expa_signup_date = datetime.datetime.strptime(salesforce_dictionary['EXPA_SignUp_Date__c'],
@@ -66,6 +71,13 @@ def main():
                     gis_launch_date = datetime.datetime.strptime('2014-11-05', '%Y-%m-%d').date()
                     if expa_signup_date >= gis_launch_date:
                         logging.info('Creating a new lead for %s (%s)...', full_name, email)
+                        salesforce_dictionary['RecordTypeId'] = '01220000000MHoeAAG'
+                        salesforce_dictionary['LeadSource'] = 'Opportunities Portal'
+                        salesforce_dictionary.pop("Minimum_Duration__c", None)
+                        salesforce_dictionary.pop("Maximum_Duration__c", None)
+                        salesforce_dictionary.pop("EXPA_SignUp_Date__c", None)
+                        salesforce_dictionary.pop("Regional_Preferences__c", None)
+                        salesforce_dictionary.pop("Country_Preference__c", None)
                         sf.create_lead(salesforce_dictionary)
                     else:
                         logging.info(
