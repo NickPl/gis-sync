@@ -110,6 +110,7 @@ class EXPASalesforceConverter:
             result['Earliest_Start_Date__c'] = person_json['earliest_start_date']
             result['Latest_End_Date__c'] = person_json['latest_end_date']
             result['EXPA_Skills__c'] = EXPASalesforceConverter.collect_from_picklist(person_json['skills'])
+            result['EXPA_Languages__c'] = EXPASalesforceConverter.collect_from_picklist(person_json['languages'])
             result['EXPA_Backgrounds__c'] = EXPASalesforceConverter.collect_from_picklist(person_json['backgrounds'])
             result['EXPA_Issues__c'] = EXPASalesforceConverter.collect_from_picklist(person_json['issues'])
             result['EXPA_Work_Fields__c'] = EXPASalesforceConverter.collect_from_picklist(person_json['work_fields'])
