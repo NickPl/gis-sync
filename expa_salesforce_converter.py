@@ -149,7 +149,11 @@ class EXPASalesforceConverter:
             else:
                 result['Programme__c'] = 'Global Community Development Programme'
         if expa_json['specifics_info'] is not None:
-            result['EXPA_Salary__c'] = expa_json['specifics_info']['salary']
+            salary = expa_json['specifics_info']['salary']
+            if salary is not None:
+                if len(salary) > 31:
+                    salary = salary[:31]
+                    result['EXPA_Salary__c'] = salary
         if expa_json['host_lc'] is not None:
             office_id = expa_json['host_lc']['id']
         else:

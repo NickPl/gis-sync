@@ -42,7 +42,7 @@ def main():
             expa = expa_wrapper.EXPAWrapper(credentials["expa"]["user"], credentials["expa"]["password"])
             if len(sys.argv) > 1 and sys.argv[1] == 'daily':
                 date_to_sync = datetime.datetime.today() - datetime.timedelta(days=30)
-                #date_to_sync = datetime.datetime.today() - datetime.timedelta(hours=26)
+                # date_to_sync = datetime.datetime.today() - datetime.timedelta(hours=26)
                 logging.info("Starting daily sync...")
             else:
                 date_to_sync = datetime.datetime.today() - datetime.timedelta(minutes=180)
@@ -58,28 +58,31 @@ def main():
                     logging.info('Updating opportunity information for %s (%s)...', name, expa_id)
                     record_id = sf.update_opportunity(salesforce_dictionary)
                     status_lower = salesforce_dictionary['Form_Status__c'].lower()
-                    if status_lower in {'matched', 'realized', 'completed'} and not sf.does_match_object_exist(record_id):
-                        match_data = expa.get_match_data(expa_id)
-                        if match_data is not None:
-                            sf.create_match_object(record_id, match_data["person"], match_data["matched_date"])
-                    existing_applicants = sf.get_applicants(record_id)
-                    new_applicants = expa.get_opportunity_applicants(expa_id, existing_applicants)
-                    for applicant in new_applicants:
-                        app_sf_dictionary = expa_salesforce_converter.convert_trainee_json_to_salesforce_dictionary(
-                            applicant, salesforce_dictionary['OwnerId'], record_id)
-                        sf.create_lead(app_sf_dictionary)
+                    if status_lower in {'approved', 'matched', 'realized', 'completed'}:
+                        current_status = None
+                        if status_lower == 'approved':
+                            current_status = 'matched'
+                        applicants = expa.get_opportunity_applicants(expa_id, [], status_lower, current_status)
+                        existing_applicants = sf.get_applicants(record_id)
+                        for applicant in applicants:
+                            does_already_exist = False
+                            for existing_applicant in existing_applicants:
+                                if applicant['id'] == existing_applicant:
+                                    does_already_exist = True
+                                    break
+                            if not does_already_exist:
+                                app_sf_dictionary = expa_salesforce_converter.convert_trainee_json_to_salesforce_dictionary(
+                                    applicant, salesforce_dictionary['OwnerId'], record_id)
+                                sf.create_lead(app_sf_dictionary)
+                                match_data = expa.get_match_data(expa_id, None, applicant['id'])
+                                sf.create_match_object(record_id, match_data["person"], match_data["matched_date"])
                 else:
                     expa_signup_date = datetime.datetime.strptime(salesforce_dictionary['Created_Date__c'],
                                                                   '%Y-%m-%dT%H:%M:%SZ').date()
                     gis_launch_date = datetime.datetime.strptime('2014-11-05', '%Y-%m-%d').date()
                     if expa_signup_date >= gis_launch_date:
                         logging.info('Creating a new opportunity for %s (%s)...', name, expa_id)
-                        record_id = sf.create_opportunity(salesforce_dictionary)
-                        applicants = expa.get_opportunity_applicants(expa_id, [])
-                        for applicant in applicants:
-                            app_sf_dictionary = expa_salesforce_converter.convert_trainee_json_to_salesforce_dictionary(
-                                applicant, salesforce_dictionary['OwnerId'], record_id)
-                            sf.create_lead(app_sf_dictionary)
+                        sf.create_opportunity(salesforce_dictionary)
                     else:
                         logging.info(
                             'Not creating a new opportunity for %s (%s) because the sign up date is before the GIS launch date...',
