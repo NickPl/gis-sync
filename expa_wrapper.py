@@ -110,7 +110,6 @@ class EXPAWrapper:
             url += '&filters%5Blast_interaction%5D%5Bfrom%5D=' + EXPAWrapper.format_date_time(last_interaction)
         url += '&filters%5Bcountries%5B%5D=1596'
         url += '&filters%5Bprogrammes%5B%5D=1&filters%5Bprogrammes%5B%5D=2'
-        #url += '&filters%5Bstatus%5D=realized'
         current_page = self.fire_request(url)
         logging.debug('Current page from EXPA: {0}'.format(current_page))
         total_items = current_page['paging']['total_items']
