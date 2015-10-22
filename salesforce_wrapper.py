@@ -138,13 +138,27 @@ class SalesforceWrapper:
             logging.exception('An error has occured while searching for Salesforce match objects!')
             return False
 
-    def create_match_object(self, opportunity_id, trainee_expa_id, match_date):
-        query = "SELECT Id FROM Account WHERE Opportunity__c = '{0}' AND EXPA_EP_ID__c = {1}".format(opportunity_id, trainee_expa_id)
+    def update_match_object(self, opportunity_id, match_data):
+        query = "SELECT Id FROM Match2__c WHERE Opportunity__c = '{0}'".format(opportunity_id)
+        try:
+            query_result = self.sf.query_all(query)
+            for record in query_result["records"]:
+                match_dictionary = {"Match_Date__c": match_data['matched_date']}
+                if match_data['realized_date'] is not None:
+                    match_dictionary['Realized_Date__c'] = match_data['realized_date']
+                self.sf.Match2__c.update(record['Id'], match_dictionary)
+        except Exception:
+            logging.exception('An error has occured while creating a Salesforce match object!')
+
+    def create_match_object(self, opportunity_id, match_data):
+        query = "SELECT Id FROM Account WHERE Opportunity__c = '{0}' AND EXPA_EP_ID__c = {1}".format(opportunity_id, match_data['person'])
         try:
             query_result = self.sf.query_all(query)
             for record in query_result["records"]:
                 account_id = record['Id']
-            match_dictionary = {"Trainee__c": account_id, "Opportunity__c": opportunity_id, "Match_Date__c": match_date}
+            match_dictionary = {"Trainee__c": account_id, "Opportunity__c": opportunity_id, "Match_Date__c": match_data['matched_date']}
+            if match_data['realized_date'] is not None:
+                match_dictionary['Realized_Date__c'] = match_data['realized_date']
             self.sf.Match2__c.create(match_dictionary)
         except Exception:
             logging.exception('An error has occured while creating a Salesforce match object!')

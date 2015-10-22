@@ -99,9 +99,9 @@ class EXPAWrapper:
                 app_id = app['id']
         if app_id is None:
             return None
-        url = self.base_url + 'applications/' + str(app_id) + '/an.json?access_token={0}'
-        an_json = self.fire_request(url)
-        result = {"person": an_json['person']['id'], "matched_date": an_json['matched_or_rejected_at']}
+        url = self.base_url + 'applications/' + str(app_id) + '.json?access_token={0}'
+        app_data = self.fire_request(url)
+        result = {"person": app_data['person']['id'], "matched_date": app_data['meta']['date_matched'], "realized_date": app_data['meta']['date_realized']}
         return result
 
     def get_opportunities(self, last_interaction=None, page=None):

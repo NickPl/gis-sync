@@ -77,9 +77,11 @@ def main():
                                     applicant, salesforce_dictionary['OwnerId'], record_id)
                                 sf.create_account(app_sf_dictionary)
                             does_match_object_exist = sf.does_match_object_exist(record_id)
-                            if not does_match_object_exist:
-                                match_data = expa.get_match_data(expa_id, None, applicant['id'])
-                                sf.create_match_object(record_id, match_data["person"], match_data["matched_date"])
+                            match_data = expa.get_match_data(expa_id, None, applicant['id'])
+                            if does_match_object_exist:
+                                sf.update_match_object(record_id, match_data)
+                            else:
+                                sf.create_match_object(record_id, match_data)
                 else:
                     expa_signup_date = datetime.datetime.strptime(salesforce_dictionary['Created_Date__c'],
                                                                   '%Y-%m-%dT%H:%M:%SZ').date()
