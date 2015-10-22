@@ -73,6 +73,10 @@ class SalesforceWrapper:
     def is_query_result_empty(query_result):
         return query_result is None or query_result["totalSize"] == 0
 
+    def create_account(self, profile_dictionary):
+        result = self.sf.Account.create(profile_dictionary)
+        return result['id']
+
     def create_lead(self, profile_dictionary):
         result = self.sf.Lead.create(profile_dictionary)
         return result['id']
@@ -115,15 +119,15 @@ class SalesforceWrapper:
 
     def get_applicants(self, opportunity_id):
         result = []
-        query = "SELECT EXPA_ID__c FROM Lead WHERE TN_relation__c = '{0}'".format(opportunity_id)
+        query = "SELECT EXPA_EP_ID__c FROM Account WHERE Opportunity__c = '{0}'".format(opportunity_id)
         try:
             query_result = self.sf.query_all(query)
             if not self.is_query_result_empty(query_result):
                 for record in query_result["records"]:
-                    result.append(record["EXPA_ID__c"])
+                    result.append(record["EXPA_EP_ID__c"])
             return result
         except Exception:
-            logging.exception('An error has occured while searching for Salesforce leads!')
+            logging.exception('An error has occured while searching for Salesforce trainees!')
 
     def does_match_object_exist(self, opportunity_id):
         query = "SELECT Id FROM Match2__c WHERE Opportunity__c = '{0}'".format(opportunity_id)
@@ -135,22 +139,13 @@ class SalesforceWrapper:
             return False
 
     def create_match_object(self, opportunity_id, trainee_expa_id, match_date):
-        query = "SELECT Id FROM Lead WHERE TN_relation__c = '{0}' AND EXPA_ID__c = {1}".format(opportunity_id, trainee_expa_id)
+        query = "SELECT Id FROM Account WHERE Opportunity__c = '{0}' AND EXPA_EP_ID__c = {1}".format(opportunity_id, trainee_expa_id)
         try:
             query_result = self.sf.query_all(query)
             for record in query_result["records"]:
-                lead_id = record['Id']
-            if not self.is_query_result_empty(query_result):
-                print(self.sf.apexecute('Lead/{0}'.format(lead_id)))
-                query = "SELECT ConvertedAccountId FROM Lead WHERE TN_relation__c = '{0}' AND EXPA_ID__c = {1}".format(opportunity_id, trainee_expa_id)
-                query_result = self.sf.query_all(query)
-                if self.is_query_result_empty(query_result):
-                    raise Exception
-                print(query_result)
-                for record in query_result["records"]:
-                    accountId = record['ConvertedAccountId']
-                match_dictionary = {"Trainee__c": accountId, "Opportunity__c": opportunity_id, "Match_Date__c": match_date}
-                self.sf.Match2__c.create(match_dictionary)
+                account_id = record['Id']
+            match_dictionary = {"Trainee__c": account_id, "Opportunity__c": opportunity_id, "Match_Date__c": match_date}
+            self.sf.Match2__c.create(match_dictionary)
         except Exception:
             logging.exception('An error has occured while creating a Salesforce match object!')
 

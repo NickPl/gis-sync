@@ -45,33 +45,31 @@ class EXPASalesforceConverter:
     def convert_trainee_json_to_salesforce_dictionary(self, trainee_json, owner_id, opportunity_id):
         logging.debug('Trainee JSON: %s: ', trainee_json)
         result = {'FirstName': trainee_json['first_name'], 'LastName': trainee_json['last_name'],
-                  'Email': trainee_json['email']}
-        logging.info('Loading %s %s (%s) from EXPA...', result['FirstName'], result['LastName'], result['Email'])
+                  'PersonEmail': trainee_json['email']}
+        logging.info('Loading %s %s (%s) from EXPA...', result['FirstName'], result['LastName'], result['PersonEmail'])
         result['EXPA_ID__c'] = trainee_json['id']
         if trainee_json['dob'] is not None and trainee_json['dob'][4] == '-':
             result['Birth_Date__c'] = trainee_json['dob']
         if trainee_json['gender'] is not None:
             result['Gender__c'] = trainee_json['gender'].title()
         if trainee_json['contact_info'] is not None:
-            result['MobilePhone'] = trainee_json['contact_info']['phone']
+            result['PersonMobilePhone'] = trainee_json['contact_info']['phone']
         if trainee_json['address_info'] is not None:
             try:
-                result['Adresse__c'] = str(trainee_json['address_info']['address_1']) + str(
+                result['Address__c'] = str(trainee_json['address_info']['address_1']) + str(
                     trainee_json['address_info']['address_2'])
             except UnicodeEncodeError:
                 pass
             # result['ZIP__c'] = trainee_json['address_info']['postcode']
             result['City__c'] = trainee_json['address_info']['city']
-        result['Email'] = trainee_json['email']
         if trainee_json['profile'] is not None:
             person_json = trainee_json['profile']
             if person_json['nationalities'] is not None:
-                result['nationality__c'] = self.collect_from_multipicklist(person_json['nationalities'])
+                result['Nationalities__c'] = self.collect_from_multipicklist(person_json['nationalities'])
         result['OwnerId'] = owner_id
         lc_id = self.lc_owner_mapper.sf_to_op(owner_id)
-        result['closest_city__c'] = self.lc_city_mapper.op_to_city(lc_id)
-        result['RecordTypeId'] = '01220000000MIXs'
-        result['TN_relation__c'] = opportunity_id
+        result['RecordTypeId'] = '01220000000V4Ib'
+        result['TN__c'] = opportunity_id
         return result
 
     def convert_expa_json_to_salesforce_dictionary(self, expa_json):
