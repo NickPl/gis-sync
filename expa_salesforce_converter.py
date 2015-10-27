@@ -12,6 +12,7 @@ class EXPASalesforceConverter:
     def __init__(self):
         self.lc_owner_mapper = lc_mapper.LC2SFOwnerMapper()
         self.lc_city_mapper = lc_mapper.LC2CityMapper()
+        self.lc_sfname_mapper = lc_mapper.LC2SFAccountMapper()
 
     @staticmethod
     def get_programmes(person_json):
@@ -143,9 +144,9 @@ class EXPASalesforceConverter:
         result['Number_of_openings__c'] = expa_json['openings']
         for programme in expa_json['programmes']:
             if programme['id'] == 2:
-                result['Programme__c'] = 'Global Internship Programme'
+                result['Internship_Type__c'] = 'Global Internship Programme'
             else:
-                result['Programme__c'] = 'Global Community Development Programme'
+                result['Internship_Type__c'] = 'Global Community Development Programme'
         if expa_json['specifics_info'] is not None:
             salary = expa_json['specifics_info']['salary']
             if salary is not None:
@@ -158,6 +159,7 @@ class EXPASalesforceConverter:
             office_id = expa_json['home_lc']['id']
         try:
             result['OwnerId'] = self.lc_owner_mapper.op_to_sf(office_id)
+            result['LC__c'] = self.lc_sfname_mapper.op_to_city(office_id)
         except KeyError:
             logging.error("The EP has an invalid current office: {0}".format(office_id))
         result['Form_Status__c'] = expa_json['current_status'].title()
