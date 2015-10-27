@@ -47,7 +47,7 @@ class EXPASalesforceConverter:
         result = {'FirstName': trainee_json['first_name'], 'LastName': trainee_json['last_name'],
                   'PersonEmail': trainee_json['email']}
         logging.info('Loading %s %s (%s) from EXPA...', result['FirstName'], result['LastName'], result['PersonEmail'])
-        result['EXPA_ID__c'] = trainee_json['id']
+        result['EXPA_EP_ID__c'] = trainee_json['id']
         if trainee_json['dob'] is not None and trainee_json['dob'][4] == '-':
             result['Birth_Date__c'] = trainee_json['dob']
         if trainee_json['gender'] is not None:
@@ -68,8 +68,8 @@ class EXPASalesforceConverter:
                 result['Nationalities__c'] = self.collect_from_multipicklist(person_json['nationalities'])
         result['OwnerId'] = owner_id
         lc_id = self.lc_owner_mapper.sf_to_op(owner_id)
-        result['RecordTypeId'] = '01220000000V4Ib'
-        result['TN__c'] = opportunity_id
+        result['RecordTypeId'] = '01220000000V4Gu'
+        result['Opportunity__c'] = opportunity_id
         return result
 
     def convert_expa_json_to_salesforce_dictionary(self, expa_json):

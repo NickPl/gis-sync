@@ -62,10 +62,8 @@ class EXPAWrapper:
         url = self.people_url + str(person_id) + '.json?access_token={0}'
         return self.fire_request(url)
 
-    def get_opportunity_applicants(self, opportunity_id, existing_applicants, status=None, current_status=None):
+    def get_opportunity_applicants(self, opportunity_id, current_status):
         url = self.opportunity_url + str(opportunity_id) + '/applications.json?access_token={0}'
-        if status is not None:
-            url += '&filters%5Bstatus%5D=' + status
         current_page = self.fire_request(url)
         logging.debug('Current page from EXPA: {0}'.format(current_page))
         total_items = current_page['paging']['total_items']
@@ -78,7 +76,7 @@ class EXPAWrapper:
             current_page = self.fire_request(url + '&page=%d' % c)
             for i in current_page['data']:
                 current_id = i['person']['id']
-                if (current_status is None or i['person']['current_status'] == current_status) and current_id not in existing_applicants:
+                if i['current_status'] == current_status:
                     applicant = self.get_person_detail(current_id)
                     result.append(applicant)
         return result
@@ -90,7 +88,6 @@ class EXPAWrapper:
         else:
             status = status_filter
         url = self.base_url + 'opportunities/' + str(opportunity_id) + '/applications.json?access_token={0}'
-        url += '&filters%5Bstatus%5D=' + status
         app_json = self.fire_request(url)
         app_id = None
         print(app_json)
@@ -101,7 +98,9 @@ class EXPAWrapper:
             return None
         url = self.base_url + 'applications/' + str(app_id) + '.json?access_token={0}'
         app_data = self.fire_request(url)
-        result = {"person": app_data['person']['id'], "matched_date": app_data['meta']['date_matched'], "realized_date": app_data['meta']['date_realized']}
+        result = {"person": app_data['person']['id'], "matched_date": app_data['meta']['date_matched']}
+        if 'date_realized' in app_data['meta']:
+            result["realized_date"] = app_data['meta']['date_realized']
         return result
 
     def get_opportunities(self, last_interaction=None, page=None):

@@ -59,10 +59,7 @@ def main():
                     status_lower = salesforce_dictionary['Form_Status__c'].lower()
                     if status_lower in {'approved', 'matched', 'realized', 'completed'}:
                         logging.info('Found a matched TN--looking for applicants...')
-                        current_status = None
-                        if status_lower == 'approved':
-                            current_status = 'matched'
-                        applicants = expa.get_opportunity_applicants(expa_id, [], status_lower, current_status)
+                        applicants = expa.get_opportunity_applicants(expa_id, status_lower)
                         existing_applicants = sf.get_applicants(record_id)
                         logging.info('Found {0} EXPA applicants, {1} on Salesforce...'.format(len(applicants), len(existing_applicants)))
                         for applicant in applicants:
@@ -77,6 +74,7 @@ def main():
                                     applicant, salesforce_dictionary['OwnerId'], record_id)
                                 sf.create_account(app_sf_dictionary)
                             does_match_object_exist = sf.does_match_object_exist(record_id)
+                            logging.info("Getting match data: Looking for applicant with SF id: {0}, EXPA ID: {1}, app ID: {2}...".format(record_id, expa_id, applicant['id']))
                             match_data = expa.get_match_data(expa_id, None, applicant['id'])
                             if does_match_object_exist:
                                 sf.update_match_object(record_id, match_data)

@@ -119,7 +119,7 @@ class SalesforceWrapper:
 
     def get_applicants(self, opportunity_id):
         result = []
-        query = "SELECT EXPA_EP_ID__c FROM Account WHERE Opportunity__c = '{0}'".format(opportunity_id)
+        query = "SELECT Id, EXPA_EP_ID__c FROM Account WHERE Opportunity__c = '{0}'".format(opportunity_id)
         try:
             query_result = self.sf.query_all(query)
             if not self.is_query_result_empty(query_result):
@@ -157,7 +157,7 @@ class SalesforceWrapper:
             for record in query_result["records"]:
                 account_id = record['Id']
             match_dictionary = {"Trainee__c": account_id, "Opportunity__c": opportunity_id, "Match_Date__c": match_data['matched_date']}
-            if match_data['realized_date'] is not None:
+            if 'realized_date' in match_data:
                 match_dictionary['Realized_Date__c'] = match_data['realized_date']
             self.sf.Match2__c.create(match_dictionary)
         except Exception:
