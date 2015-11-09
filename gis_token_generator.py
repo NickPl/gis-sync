@@ -16,9 +16,8 @@ class GISTokenGenerator:
         logging.info('Generating a token for {0}...'.format(self.email))
         self.opener.open('https://auth.aiesec.org/users/sign_in', self.login_data)
         for cookie in self.cj:
-            if cookie.name == 'aiesec_token':
-                token_json = json.loads(urllib.unquote(cookie.value))
-                token = token_json['token']['access_token']
+            if cookie.name == 'expa_token':
+                token = cookie.value 
         if token is None:
             raise Exception('Unable to generate a token for {0}!'.format(self.email))
         return token
