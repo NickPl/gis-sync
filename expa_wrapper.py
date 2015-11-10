@@ -91,9 +91,14 @@ class EXPAWrapper:
         app_json = self.fire_request(url)
         app_id = None
         print(app_json)
-        for app in app_json['data']:
-            if person_id is None or app['person']['id'] == person_id:
-                app_id = app['id']
+        total_pages = app_json['paging']['total_pages']
+        start_page = 1
+        end_page = total_pages + 1
+        for c in range(start_page, end_page):
+            current_page = self.fire_request(url + '&page=%d' % c)
+            for app in current_page['data']:
+                if person_id is None or app['person']['id'] == person_id:
+                    app_id = app['id']
         if app_id is None:
             return None
         url = self.base_url + 'applications/' + str(app_id) + '.json?access_token={0}'
