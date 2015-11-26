@@ -176,4 +176,5 @@ class EXPASalesforceConverter:
         result['Background__c'] = EXPASalesforceConverter.collect_from_multipicklist(expa_json['backgrounds'])
         result['Languages_preferred__c'] = EXPASalesforceConverter.collect_languages(expa_json['languages'], False)
         result['Languages__c'] = EXPASalesforceConverter.collect_languages(expa_json['languages'])
+        result['Level_of_Study__c'] = EXPASalesforceConverter.collect_from_multipicklist(expa_json['study_levels'])
         return result
