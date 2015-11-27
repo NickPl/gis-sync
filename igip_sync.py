@@ -52,10 +52,11 @@ def main():
                 salesforce_dictionary = expa_salesforce_converter.convert_opp_expa_json_to_salesforce_dictionary(
                     current_opportunity)
                 expa_id = salesforce_dictionary['Opportunity_ID__c']
+                expa_id_company = current_opportunity['branch']['company_id']
                 name = salesforce_dictionary['Name']
                 if sf.does_opportunity_exist(expa_id):
                     logging.info('Updating opportunity information for %s (%s)...', name, expa_id)
-                    record_id = sf.update_opportunity(salesforce_dictionary)
+                    record_id = sf.update_opportunity(salesforce_dictionary, expa_id_company)
                     status_lower = salesforce_dictionary['Form_Status__c'].lower()
                     if status_lower in {'approved', 'matched', 'realized', 'completed'}:
                         logging.info('Found a matched TN--looking for applicants...')
@@ -86,7 +87,7 @@ def main():
                     gis_launch_date = datetime.datetime.strptime('2014-11-05', '%Y-%m-%d').date()
                     if expa_signup_date >= gis_launch_date:
                         logging.info('Creating a new opportunity for %s (%s)...', name, expa_id)
-                        sf.create_opportunity(salesforce_dictionary)
+                        sf.create_opportunity(salesforce_dictionary, expa_id_company)
                     else:
                         logging.info(
                             'Not creating a new opportunity for %s (%s) because the sign up date is before the GIS launch date...',

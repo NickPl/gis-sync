@@ -105,17 +105,35 @@ class SalesforceWrapper:
             except SalesforceMalformedRequest as smr:
                 logging.warning(smr)
 
-    def update_opportunity(self, opportunity_dictionary):
+    def update_opportunity(self, opportunity_dictionary, expa_id_company):
         for record in self.current_opportunity_ids:
             try:
+                company_sf_id = self.get_company(expa_id_company)
+                if company_sf_id is not None:
+                    opportunity_dictionary['Account__c'] = company_sf_id
                 self.sf.TN__c.update(record, opportunity_dictionary)
                 return record
             except SalesforceMalformedRequest as smr:
                 logging.warning(smr)
 
-    def create_opportunity(self, opportunity_dictionary):
+    def create_opportunity(self, opportunity_dictionary, expa_id_company):
+        company_sf_id = self.get_company(expa_id_company)
+        if company_sf_id is not None:
+            opportunity_dictionary['Account__c'] = company_sf_id
         result = self.sf.TN__c.create(opportunity_dictionary)
         return result['id']
+
+    def get_company(self, expa_id):
+        result = None
+        query = "SELECT Id FROM Account WHERE EXPA_ID__c = {0} AND IsPersonAccount = false".format(expa_id)
+        try:
+            query_result = self.sf.query_all(query)
+            if not self.is_query_result_empty(query_result):
+                for record in query_result["records"]:
+                    result = record["Id"]
+            return result
+        except Exception:
+            logging.exception('An error has occured while searching for Salesforce trainees!')
 
     def get_applicants(self, opportunity_id):
         result = []
