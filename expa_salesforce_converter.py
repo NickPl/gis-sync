@@ -63,10 +63,6 @@ class EXPASalesforceConverter:
                 pass
             # result['ZIP__c'] = trainee_json['address_info']['postcode']
             result['City__c'] = trainee_json['address_info']['city']
-        if trainee_json['profile'] is not None:
-            person_json = trainee_json['profile']
-            if person_json['nationalities'] is not None:
-                result['Nationalities__c'] = self.collect_from_multipicklist(person_json['nationalities'])
         result['OwnerId'] = owner_id
         lc_id = self.lc_owner_mapper.sf_to_op(owner_id)
         result['RecordTypeId'] = '01220000000V4Gu'
