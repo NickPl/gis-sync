@@ -142,13 +142,13 @@ class SalesforceWrapper:
             query_result = self.sf.query_all(query)
             if not self.is_query_result_empty(query_result):
                 for record in query_result["records"]:
-                    result.append(record["EXPA_EP_ID__c"])
+                    result.append({'expa_id': record["EXPA_EP_ID__c"], 'sf_id': record["Id"]})
             return result
         except Exception:
             logging.exception('An error has occured while searching for Salesforce trainees!')
 
-    def does_match_object_exist(self, opportunity_id):
-        query = "SELECT Id FROM Match2__c WHERE Opportunity__c = '{0}'".format(opportunity_id)
+    def does_match_object_exist(self, opportunity_id, applicant_id):
+        query = "SELECT Id FROM Match2__c WHERE Opportunity__c = '{0}' AND Trainee__c = '{1}'".format(opportunity_id, applicant_id)
         try:
             query_result = self.sf.query_all(query)
             return not self.is_query_result_empty(query_result)

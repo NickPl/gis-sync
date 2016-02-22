@@ -66,15 +66,16 @@ def main():
                         for applicant in applicants:
                             does_already_exist = False
                             for existing_applicant in existing_applicants:
-                                logging.info("Comparing {0} and {1}...".format(applicant['id'], existing_applicant))
-                                if applicant['id'] == existing_applicant:
+                                logging.info("Comparing {0} and {1}...".format(applicant['id'], existing_applicant['expa_id']))
+                                if applicant['id'] == existing_applicant['expa_id']:
                                     does_already_exist = True
+                                    applicant_sf_id = existing_applicant['sf_id']
                                     break
                             if not does_already_exist:
                                 app_sf_dictionary = expa_salesforce_converter.convert_trainee_json_to_salesforce_dictionary(
                                     applicant, salesforce_dictionary['OwnerId'], record_id)
-                                sf.create_account(app_sf_dictionary)
-                            does_match_object_exist = sf.does_match_object_exist(record_id)
+                                applicant_sf_id = sf.create_account(app_sf_dictionary)
+                            does_match_object_exist = sf.does_match_object_exist(record_id, applicant_sf_id)
                             logging.info("Getting match data: Looking for applicant with SF id: {0}, EXPA ID: {1}, app ID: {2}...".format(record_id, expa_id, applicant['id']))
                             match_data = expa.get_match_data(expa_id, None, applicant['id'])
                             if does_match_object_exist:
