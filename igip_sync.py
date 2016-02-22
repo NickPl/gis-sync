@@ -60,7 +60,7 @@ def main():
                     status_lower = salesforce_dictionary['Form_Status__c'].lower()
                     if status_lower in {'approved', 'matched', 'realized', 'completed'}:
                         logging.info('Found a matched TN--looking for applicants...')
-                        applicants = expa.get_opportunity_applicants(expa_id, status_lower)
+                        applicants = expa.get_opportunity_applicants(expa_id, ['approved', 'matched', 'realized', 'completed'])
                         existing_applicants = sf.get_applicants(record_id)
                         logging.info('Found {0} EXPA applicants, {1} on Salesforce...'.format(len(applicants), len(existing_applicants)))
                         for applicant in applicants:

@@ -161,7 +161,7 @@ class SalesforceWrapper:
         try:
             query_result = self.sf.query_all(query)
             for record in query_result["records"]:
-                match_dictionary = {"Match_Date__c": match_data['matched_date']}
+                match_dictionary = {"Match_Date__c": match_data['matched_date'], "Application_ID__c": match_data['application_id']}
                 if 'realized_date' in match_data:
                     match_dictionary['Realized_Date__c'] = match_data['realized_date']
                 self.sf.Match2__c.update(record['Id'], match_dictionary)

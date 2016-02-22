@@ -62,7 +62,7 @@ class EXPAWrapper:
         url = self.people_url + str(person_id) + '.json?access_token={0}'
         return self.fire_request(url)
 
-    def get_opportunity_applicants(self, opportunity_id, current_status):
+    def get_opportunity_applicants(self, opportunity_id, valid_status_array):
         url = self.opportunity_url + str(opportunity_id) + '/applications.json?access_token={0}'
         current_page = self.fire_request(url)
         logging.debug('Current page from EXPA: {0}'.format(current_page))
@@ -76,7 +76,7 @@ class EXPAWrapper:
             current_page = self.fire_request(url + '&page=%d' % c)
             for i in current_page['data']:
                 current_id = i['person']['id']
-                if i['current_status'] == current_status:
+                if i['current_status'] in valid_status_array:
                     applicant = self.get_person_detail(current_id)
                     result.append(applicant)
         return result
@@ -103,7 +103,7 @@ class EXPAWrapper:
             return None
         url = self.base_url + 'applications/' + str(app_id) + '.json?access_token={0}'
         app_data = self.fire_request(url)
-        result = {"person": app_data['person']['id'], "matched_date": app_data['meta']['date_matched']}
+        result = {"person": app_data['person']['id'], "matched_date": app_data['meta']['date_matched'], "application_id": app_id}
         if 'date_realized' in app_data['meta']:
             result["realized_date"] = app_data['meta']['date_realized']
         return result
