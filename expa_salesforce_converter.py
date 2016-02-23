@@ -64,7 +64,6 @@ class EXPASalesforceConverter:
             # result['ZIP__c'] = trainee_json['address_info']['postcode']
             result['City__c'] = trainee_json['address_info']['city']
         result['OwnerId'] = owner_id
-        lc_id = self.lc_owner_mapper.sf_to_op(owner_id)
         result['RecordTypeId'] = '01220000000V4Gu'
         result['Opportunity__c'] = opportunity_id
         return result

@@ -142,6 +142,7 @@ class SalesforceWrapper:
             query_result = self.sf.query_all(query)
             if not self.is_query_result_empty(query_result):
                 for record in query_result["records"]:
+                    logging.info("record: {0}".format(record))
                     result.append({'expa_id': record["EXPA_EP_ID__c"], 'sf_id': record["Id"]})
             return result
         except Exception:
@@ -156,8 +157,8 @@ class SalesforceWrapper:
             logging.exception('An error has occured while searching for Salesforce match objects!')
             return False
 
-    def update_match_object(self, opportunity_id, match_data):
-        query = "SELECT Id FROM Match2__c WHERE Opportunity__c = '{0}'".format(opportunity_id)
+    def update_match_object(self, opportunity_id, match_data, applicant_id):
+        query = "SELECT Id FROM Match2__c WHERE Opportunity__c = '{0}' AND Trainee__c = '{1}'".format(opportunity_id, applicant_id)
         try:
             query_result = self.sf.query_all(query)
             for record in query_result["records"]:
@@ -168,7 +169,7 @@ class SalesforceWrapper:
         except Exception:
             logging.exception('An error has occured while creating a Salesforce match object!')
 
-    def create_match_object(self, opportunity_id, match_data):
+    def create_match_object(self, opportunity_id, match_data, account_id):
         query = "SELECT Id FROM Account WHERE Opportunity__c = '{0}' AND EXPA_EP_ID__c = {1}".format(opportunity_id, match_data['person'])
         try:
             query_result = self.sf.query_all(query)
