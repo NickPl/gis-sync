@@ -1,7 +1,7 @@
 import datetime
 import salesforce_wrapper
 import expa_wrapper
-from credentials_store import credentials
+from credentials_store_igip import credentials
 import logging
 import sys
 from expa_salesforce_converter import EXPASalesforceConverter
