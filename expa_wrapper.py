@@ -82,15 +82,9 @@ class EXPAWrapper:
         return result
 
     def get_match_data(self, opportunity_id, status_filter=None, person_id=None):
-        opp_json = self.get_opportunity_detail(opportunity_id)
-        if status_filter is None:
-            status = opp_json['current_status']
-        else:
-            status = status_filter
         url = self.base_url + 'opportunities/' + str(opportunity_id) + '/applications.json?access_token={0}'
         app_json = self.fire_request(url)
         app_id = None
-        print(app_json)
         total_pages = app_json['paging']['total_pages']
         start_page = 1
         end_page = total_pages + 1
